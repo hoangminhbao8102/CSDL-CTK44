@@ -165,25 +165,63 @@ select * from CongNhan
 --III.	Thủ tục & Hàm
 --A.	Viết các hàm sau:
 --a.	Tính tổng số công nhân của một tổ sản xuất cho trước
-create function DemSoCN(@MaTSX char(4))
-returns int
-As
-Begin
-	declare @SoCN int
-	select @SoCN = count(MaCN)
-	from CongNhan
-	where MaTSX = @MaTSX
-	return @SoCN
-end
+CREATE FUNCTION TongCongNhan(MaTSX CHAR(4))
+RETURNS INT
+BEGIN
+    DECLARE TongCongNhan INT;
+    SELECT COUNT(*) INTO TongCongNhan
+    FROM CongNhan
+    WHERE MaTSX = MaTSX;
+    RETURN TongCongNhan;
+END;
 --goi su dung hàm
-select dbo.DemSoCN('TS01') as N'Số công nhân'
-print N'số công nhân của tổ 1 là: '+ convert(varchar(10),dbo.DemSoCN('TS01'))
+SELECT dbo.TongCongNhan('TS01') AS N'Số công nhân';
+print N'số công nhân của tổ 1 là: '+ convert(varchar(10),dbo.TongCongNhan('TS01'))
 select dbo.DemSoCN('TS02') as N'Số công nhân'
-print N'số công nhân của tổ 2 là: '+ convert(varchar(10),dbo.DemSoCN('TS02'))
+print N'số công nhân của tổ 2 là: '+ convert(varchar(10),dbo.TongCongNhan('TS02'))
 --b.	Tính tổng sản lượng sản xuất trong một tháng của một loại sản phẩm cho trước.
+CREATE FUNCTION TongSanLuongTrongThang(MaSP VARCHAR(10), Thang INT)
+RETURNS INT
+BEGIN
+    DECLARE TongSanLuong INT;
+    SELECT SUM(SoLuong) INTO TongSanLuong
+    FROM ThanhPham
+    WHERE MaSP = MaSP AND MONTH(Ngay) = Thang;
+    RETURN TongSanLuong;
+END;
 --c.	Tính tổng tiền công tháng của một công nhân cho trước.
+CREATE FUNCTION TongTienCongThang(MaCN VARCHAR(10), Thang INT)
+RETURNS DECIMAL(10,2)
+BEGIN
+    DECLARE TongTienCong DECIMAL(10,2);
+    SELECT SUM(TienCong) INTO TongTienCong
+    FROM SanPham
+    INNER JOIN ThanhPham ON SanPham.MaSP = ThanhPham.MaSP
+    WHERE MaCN = MaCN AND MONTH(Ngay) = Thang;
+    RETURN TongTienCong;
+END;
 --d.	Tính tổng thu nhập trong năm của một tổ sản xuất cho trước.
+CREATE FUNCTION TongThuNhapNam(MaTSX VARCHAR(10), Nam INT)
+RETURNS DECIMAL(10,2)
+BEGIN
+    DECLARE TongThuNhap DECIMAL(10,2);
+    SELECT SUM(TienCong) INTO TongThuNhap
+    FROM SanPham
+    INNER JOIN ThanhPham ON SanPham.MaSP = ThanhPham.MaSP
+    INNER JOIN CongNhan ON ThanhPham.MaCN = CongNhan.MaCN
+    WHERE CongNhan.MaTSX = MaTSX AND YEAR(Ngay) = Nam;
+    RETURN TongThuNhap;
+END;
 --e.	Tính tổng sản lượng sản xuất của một loại sản phẩm trong một khoảng thời gian cho trước.
+CREATE FUNCTION TongSanLuongTrongKhoangThoiGian(MaSP VARCHAR(10), NgayBatDau DATE, NgayKetThuc DATE)
+RETURNS INT
+BEGIN
+    DECLARE TongSanLuong INT;
+    SELECT SUM(SoLuong) INTO TongSanLuong
+    FROM ThanhPham
+    WHERE MaSP = MaSP AND Ngay BETWEEN NgayBatDau AND NgayKetThuc;
+    RETURN TongSanLuong;
+END;
 --B.	Viết các thủ tục sau:
 --a.	In danh sách các công nhân của một tổ sản xuất cho trước.
 create function DanhSachToSX(@MaTSX char(4))
