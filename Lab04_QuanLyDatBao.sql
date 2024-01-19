@@ -138,11 +138,17 @@ from Bao_TChi A, DatBao B
 where A.Ma_Bao_TC = B.Ma_Bao_TC and A.Ten like N'Phụ nữ'
 group by A.Ma_Bao_TC, A.Ten, A.DinhKy
 --10. Cho biết tên các tờ báo dành cho học sinh, sinh viên (mã báo tạp chí bắt đầu bằng HS)
+
 --11. Cho biết những tờ báo không có người đặt mua
+
 --12. Cho biết tên, định kỳ của những tờ báo có nhiều người đặt mua nhất
+
 --13. Cho biết khách hàng đặt mua nhiều báo, tạp chí nhất
+
 --14. Cho biết các tờ báo phát hành định kỳ một tháng hai lần
+
 --15. Cho biết các tờ báo, tạp chí có từ ba khách hàng đặt mua trở lên.
+
 ----THỦ TỤC VÀ HÀM
 --I. Viết các hàm sau:
 --1. Tính tổng số tiền mua báo/tạp chí của một khách hàng cho trước

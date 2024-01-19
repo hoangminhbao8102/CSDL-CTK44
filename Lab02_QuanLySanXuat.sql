@@ -165,13 +165,13 @@ select * from CongNhan
 --III.	Thủ tục & Hàm
 --A.	Viết các hàm sau:
 --a.	Tính tổng số công nhân của một tổ sản xuất cho trước
-CREATE FUNCTION TongCongNhan(MaTSX CHAR(4))
+CREATE FUNCTION dbo.TongCongNhan(MaTSX_ChoTruoc CHAR(4))
 RETURNS INT
 BEGIN
     DECLARE TongCongNhan INT;
     SELECT COUNT(*) INTO TongCongNhan
     FROM CongNhan
-    WHERE MaTSX = MaTSX;
+    WHERE MaTSX = MaTSX_ChoTruoc;
     RETURN TongCongNhan;
 END;
 --goi su dung hàm
@@ -180,56 +180,74 @@ print N'số công nhân của tổ 1 là: '+ convert(varchar(10),dbo.TongCongNh
 select dbo.DemSoCN('TS02') as N'Số công nhân'
 print N'số công nhân của tổ 2 là: '+ convert(varchar(10),dbo.TongCongNhan('TS02'))
 --b.	Tính tổng sản lượng sản xuất trong một tháng của một loại sản phẩm cho trước.
-CREATE FUNCTION TongSanLuongTrongThang(MaSP VARCHAR(10), Thang INT)
+CREATE FUNCTION TongSanLuongTrongThang(MaSP_ChoTruoc CHAR(5), Thang_ChoTruoc INT)
 RETURNS INT
 BEGIN
     DECLARE TongSanLuong INT;
     SELECT SUM(SoLuong) INTO TongSanLuong
     FROM ThanhPham
-    WHERE MaSP = MaSP AND MONTH(Ngay) = Thang;
+    WHERE MaSP = MaSP_ChoTruoc AND MONTH(Ngay) = Thang_ChoTruoc;
     RETURN TongSanLuong;
 END;
 --c.	Tính tổng tiền công tháng của một công nhân cho trước.
-CREATE FUNCTION TongTienCongThang(MaCN VARCHAR(10), Thang INT)
+CREATE FUNCTION TongTienCongThang(MaCN_ChoTruoc CHAR(5), Thang_ChoTruoc INT)
 RETURNS DECIMAL(10,2)
 BEGIN
-    DECLARE TongTienCong DECIMAL(10,2);
+    DECLARE TongTienCong DECIMAL(10,2)
     SELECT SUM(TienCong) INTO TongTienCong
     FROM SanPham
     INNER JOIN ThanhPham ON SanPham.MaSP = ThanhPham.MaSP
-    WHERE MaCN = MaCN AND MONTH(Ngay) = Thang;
+    WHERE MaCN = MaCN_ChoTruoc AND MONTH(Ngay) = Thang_ChoTruoc;
     RETURN TongTienCong;
-END;
+END
 --d.	Tính tổng thu nhập trong năm của một tổ sản xuất cho trước.
-CREATE FUNCTION TongThuNhapNam(MaTSX VARCHAR(10), Nam INT)
+CREATE FUNCTION TongThuNhapNam(MaTSX_ChoTruoc VARCHAR(10), Nam_ChoTruoc INT)
 RETURNS DECIMAL(10,2)
 BEGIN
-    DECLARE TongThuNhap DECIMAL(10,2);
+    DECLARE TongThuNhap DECIMAL(10,2)
     SELECT SUM(TienCong) INTO TongThuNhap
     FROM SanPham
     INNER JOIN ThanhPham ON SanPham.MaSP = ThanhPham.MaSP
     INNER JOIN CongNhan ON ThanhPham.MaCN = CongNhan.MaCN
-    WHERE CongNhan.MaTSX = MaTSX AND YEAR(Ngay) = Nam;
-    RETURN TongThuNhap;
-END;
+    WHERE CongNhan.MaTSX = MaTSX_ChoTruoc AND YEAR(Ngay) = Nam_ChoTruoc
+    RETURN TongThuNhap
+END
 --e.	Tính tổng sản lượng sản xuất của một loại sản phẩm trong một khoảng thời gian cho trước.
 CREATE FUNCTION TongSanLuongTrongKhoangThoiGian(MaSP VARCHAR(10), NgayBatDau DATE, NgayKetThuc DATE)
 RETURNS INT
 BEGIN
-    DECLARE TongSanLuong INT;
+    DECLARE TongSanLuong INT
     SELECT SUM(SoLuong) INTO TongSanLuong
     FROM ThanhPham
-    WHERE MaSP = MaSP AND Ngay BETWEEN NgayBatDau AND NgayKetThuc;
-    RETURN TongSanLuong;
-END;
+    WHERE MaSP = MaSP AND Ngay BETWEEN NgayBatDau AND NgayKetThuc
+    RETURN TongSanLuong
+END
 --B.	Viết các thủ tục sau:
 --a.	In danh sách các công nhân của một tổ sản xuất cho trước.
-create function DanhSachToSX(@MaTSX char(4))
-returns table
-As
-	return(select * from CongNhan where MaTSX = @MaTSX)
-go
+CREATE PROCEDURE DanhSachCongNhanTheoToSanXuat
+    @MaTSX varchar(50)
+AS
+BEGIN
+    SELECT CN.Ho, CN.Ten
+    FROM CongNhan CN
+    WHERE CN.MaTSX = @MaTSX
+END
 --gọi sử dụng hàm
-select * from dbo.DanhSachToSX('TS02')
+EXEC DanhSachCongNhanTheoToSanXuat 'TS01'
 --b.	In bảng chấm công sản xuất trong tháng của một công nhân cho trước (bao gồm Tên sản phẩm, đơn vị tính, số lượng sản xuất trong tháng, đơn  giá, thành tiền).
+CREATE PROCEDURE BangChamCongSanXuatTrongThang
+    @MaCN varchar(50),
+    @Thang int,
+    @Nam int
+AS
+BEGIN
+    SELECT SP.TenSP, SP.DVT, TP.SoLuong, SP.TienCong, TP.SoLuong * SP.TienCong AS ThanhTien
+    FROM ThanhPham TP
+    INNER JOIN SanPham SP ON TP.MaSP = SP.MaSP
+    WHERE TP.MaCN = @MaCN
+        AND MONTH(TP.Ngay) = @Thang
+        AND YEAR(TP.Ngay) = @Nam
+END
+--gọi sử dụng hàm
+EXEC BangChamCongSanXuatTrongThang 'CN01', 10, 2021
 ------------------------

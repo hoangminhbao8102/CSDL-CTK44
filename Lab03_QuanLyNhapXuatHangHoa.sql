@@ -204,27 +204,90 @@ having COUNT(C.MaHH) <= all (select COUNT(D.MaHH)
 							 from CT_HoaDon D
 							 group by D.SoHD)
 --8. Cho biết thông tin của mặt hàng chưa bán được
+SELECT * FROM HangHoa WHERE MaHH NOT IN (SELECT MaHH FROM CT_HoaDon)
 --9. Cho biết tên và tổng số lượng bán của mặt hàng bán chạy nhất (tính theo số lượng)
+SELECT TenHH, SUM(SoLuong) AS TongSoLuongBan FROM CT_HoaDon
+JOIN HangHoa ON CT_HoaDon.MaHH = HangHoa.MaHH
+GROUP BY TenHH
+ORDER BY TongSoLuongBan DESC
+LIMIT 1
 --10. Cho biết tên và tổng số lượng của mặt hàng nhập về ít nhất
+SELECT TenHH, SUM(SoLuong) AS TongSoLuongNhap FROM CT_HoaDon
+JOIN HangHoa ON CT_HoaDon.MaHH = HangHoa.MaHH
+GROUP BY TenHH
+ORDER BY TongSoLuongNhap ASC
+LIMIT 1
 --11. Cho biết hóa đơn nhập nhiều mặt hàng nhất
+SELECT SoHD, COUNT(MaHH) AS SoMatHangNhap FROM CT_HoaDon
+GROUP BY SoHD
+ORDER BY SoMatHangNhap DESC
+LIMIT 1
 --12. Cho biết các mặt hàng không được nhập hàng trong tháng 1/2006
+SELECT * FROM HangHoa WHERE MaHH NOT IN (SELECT MaHH FROM CT_HoaDon
+                                          JOIN HoaDon ON CT_HoaDon.SoHD = HoaDon.SoHD
+                                          WHERE MONTH(NgayLapHD) = 1 AND YEAR(NgayLapHD) = 2006)
 --13. Cho biết tên các mặt hàng không bán được trong tháng 6/2006
+SELECT TenHH FROM HangHoa
+WHERE MaHH NOT IN (SELECT MaHH FROM CT_HoaDon
+                  JOIN HoaDon ON CT_HoaDon.SoHD = HoaDon.SoHD
+                  WHERE MONTH(NgayLapHD) = 6 AND YEAR(NgayLapHD) = 2006)
 --14. Cho biết cửa hàng bán bao nhiêu mặt hàng
+SELECT COUNT(DISTINCT MaHH) AS SoMatHang FROM CT_HoaDon
 --15. Cho biết số mặt hàng mà từng nhà cung cấp có khả năng cung cấp
+SELECT DT.TenDT, COUNT(DISTINCT KH.MaHH) AS SoMatHangCungCap FROM KhaNangCC KN
+JOIN DoiTac DT ON KN.MaDT = DT.MaDT
+JOIN HangHoa HH ON KN.MaHH = HH.MaHH
+JOIN CT_HoaDon KH ON HH.MaHH = KH.MaHH
+GROUP BY DT.TenDT
 --16. Cho biết thông tin của khách hàng có giao dịch với cửa hàng nhiều nhất
+SELECT DT.TenDT, COUNT(DISTINCT KH.SoHD) AS SoGiaoDich FROM DoiTac DT
+JOIN HoaDon HD ON DT.MaDT = HD.MaDT
+JOIN CT_HoaDon KH ON HD.SoHD = KH.SoHD
+GROUP BY DT.TenDT
+ORDER BY SoGiaoDich DESC
+LIMIT 1
 --17. Tính tổng doanh thu năm 2006
+SELECT SUM(DonGia * SoLuong) AS TongDoanhThu FROM CT_HoaDon
+JOIN HangHoa ON CT_HoaDon.MaHH = HangHoa.MaHH
+JOIN HoaDon ON CT_HoaDon.SoHD = HoaDon.SoHD
+WHERE YEAR(NgayLapHD) = 2006
 --18. Cho biết loại mặt hàng bán chạy nhất
+SELECT TenHH, SUM(SoLuong) AS TongSoLuongBan FROM CT_HoaDon
+JOIN HangHoa ON CT_HoaDon.MaHH = HangHoa.MaHH
+GROUP BY TenHH
+ORDER BY TongSoLuongBan DESC
+LIMIT 1
 --19. Liệt kê thông tin bán hàng của tháng 5/2006 bao gồm: MaHH, TenHH, DVT, tổng số lượng, tổng thành tiền
+SELECT HH.MaHH, HH.TenHH, HH.DVT, SUM(CT.SoLuong) AS TongSoLuong, SUM(CT.DonGia * CT.SoLuong) AS TongThanhTien FROM CT_HoaDon CT
+JOIN HangHoa HH ON CT.MaHH = HH.MaHH
+JOIN HoaDon HD ON CT.SoHD = HD.SoHD
+WHERE MONTH(HD.NgayLapHD) = 5 AND YEAR(HD.NgayLapHD) = 2006
+GROUP BY HH.MaHH, HH.TenHH, HH.DVT
 --20. Liệt kê thông tin của mặt hàng có nhiều người mua nhất
+SELECT HH.MaHH, HH.TenHH, HH.DVT, COUNT(HD.SoHD) AS SoNguoiMua FROM CT_HoaDon CT
+JOIN HangHoa HH ON CT.MaHH = HH.MaHH
+JOIN HoaDon HD ON CT.SoHD = HD.SoHD
+GROUP BY HH.MaHH, HH.TenHH, HH.DVT
+ORDER BY SoNguoiMua DESC
+LIMIT 1
 --21. Tính và cập nhật tổng trị giá của các hóa đơn
+UPDATE HoaDon 
+SET TongTG = (SELECT SUM(DonGia * SoLuong) FROM CT_HoaDon WHERE CT_HoaDon.SoHD = HoaDon.SoHD)
+WHERE YEAR(NgayLapHD) = 2006
 --THỦ TUC VÀ HÀM
 --I. Viết các hàm sau:
 --1. Tính tổng số lượng nhập trong một khoảng thời gian của một mặt hàng cho trước
+
 --2. Tính tổng số lượng xuất trong một khoảng thời gian của một mặt hàng cho trước
+
 --3. Tính tổng doanh thu trong một tháng cho trước
+
 --4. Tính tổng doanh thu của một mặt hàng trong một khoảng thời gian cho trước
+
 --5. Tính tổng số tiền nhập hàng trong một khoảng thời gian cho trước
+
 --6. Tính tổng số tiền của một hóa đơn cho trước
+
 --II. Viết các thủ tục sau:
 --1. Cập nhật số lượng tồn của một mặt hàng khi nhập hàng hoặc xuất hàng
 --2. Cập nhật tổng trị giá của một hóa đơn
